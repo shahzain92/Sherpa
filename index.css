@@ -1,0 +1,229 @@
+/* Always set the map height explicitly to define the size of the div
+ * element that contains the map. */
+
+/* Optional: Makes the sample page fill the window. */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: 'Oxygen-Light', sans-serif;
+}
+
+/*Masonry*/
+* { box-sizing: border-box; }
+
+body { font-family: 'Oxygen-Light', sans-serif; }
+
+/* ---- grid ---- */
+
+.grid {
+    /*background: #EEE;*/
+    max-width: 100%;
+}
+
+/* clearfix */
+.grid:after {
+    content: '';
+    display: block;
+    clear: both;
+}
+
+/* ---- grid-item ---- */
+
+.grid-item {
+    width: 160px;
+    height: 120px;
+    float: left;
+    border: 2px solid #333;
+    border-color: hsla(0, 0%, 0%, 0.5);
+    border-radius: 5px;
+}
+
+.grid-item--width2 {
+    /*width: 298px;*/
+    /*min-width: 298px;*/
+    width: 25%;
+}
+
+.grid-item--width3 { width: 480px; }
+.grid-item--width4 { width: 640px; }
+
+.grid-item--height2 { height: 280px; }
+.grid-item--height3 { height: 360px; }
+/*end*/
+
+
+#error {
+    padding: 5px;
+    height: auto;
+    text-align: center;
+    font-size: 12px;
+    color: white;
+    background-color: white;
+    border-radius: 5px;
+    margin-top: 5px;
+    font-family: 'Oxygen-Light', sans-serif;
+    font-size: 14px;
+}
+
+#top {
+    padding-top: 110px;
+}
+
+#topBtn {
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    color: #ba0e32;
+    font-size: 160%;
+}
+
+#packingNav {
+    font-family: 'Oxygen-Light', sans-serif;
+    padding-bottom: 5px;
+}
+
+#todoNav {
+    font-family: 'Oxygen-Light', sans-serif;
+    padding-bottom: 5px;
+}
+
+#gridholder {
+    margin-left: 44px;
+    margin-right: 44px;
+}
+
+#inputContainer {
+    width: 60%;
+}
+
+#parent {
+    display: flex;
+}
+
+#button {
+    width: 12%;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
+
+#narrow {
+    width: 15%;
+    border-radius: 0px 0px 0px 0px;
+}
+
+#wide {
+    flex: 1;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+.title {
+    text-align: center;
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-size: 40px;
+    padding-bottom: 10px;
+    padding-top: 20px;
+}
+
+.leftItem {
+    width: 40%;
+    height: 96px;
+    float: left;
+}
+
+.rightItem {
+    width: 60%;
+    height: 96px;
+    float: right;
+}
+
+.weatherIcon {
+    font-size: 44px;
+    text-align: center;
+    padding: 20px;
+    margin-left: 10%;
+    margin-top: 10px;
+}
+
+.date {
+    font-family: 'Oxygen-Light', sans-serif;
+    height: 24px;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 2px;
+    background: #f7f7f7;
+}
+
+.wear {
+    font-family: 'Oxygen-Light', sans-serif;
+    text-align: center;
+}
+
+.cr {
+    /*clear: both;*/
+    /*float: ;*/
+    width: 100%;
+    max-height: 25px;
+    /*display: block;*/
+    /*position: relative;*/
+}
+
+.infoHolder {
+    top: 50%;
+    left: 50%;
+    text-align: center;
+    margin-left: 15%;
+    padding: 2px;
+}
+
+.dayInfo {
+    text-align: left;
+    font-family: 'Oxygen-Light', sans-serif;
+    font-size: 12px;
+}
+
+.stop-scrolling {
+    height: 100%;
+    overflow: hidden;
+}
+
+.wearable {
+    /*border: 1px solid black;*/
+    /*padding: 4px 2px;*/
+    margin-right: 20px;
+    display: inline-block;
+}
+.wearable svg {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#map {
+    /*height: 70%;*/
+    height: 500px;
+    padding: 20px;
+}
+
+/*Shit*/
+#address {
+    font-family: 'Oxygen-Light', sans-serif;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    width: 800px;
+}
+
+#btn {
+    width: 8%;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    font-family: Oxygen-Light, sans-serif;
+    flex:1;
+}
+
+.searchContainer {
+    text-align: center;
+}
+
+#holderMap {
+    padding-left: 70px;
+    padding-right: 70px;
+}

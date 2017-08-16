@@ -1,0 +1,476 @@
+<!--TODO: More responsiveness-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="./index.css"/>
+    <link rel="stylesheet" href="./weather-icons.min.css"/>
+
+    <!-- Google API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_fgw-2Dn0ehK6KynoxmzacKTzxz_8Nck&libraries=places" async defer></script>
+
+    <!--jQuery js-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+
+    <!--tether js-->
+    <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
+
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+
+    <!--APIXU js-->
+    <script type="text/javascript" src="XU.js"></script>
+
+    <!--Masonry-->
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+    <script>
+        // Masonry
+        $('.grid').masonry({
+            itemSelector: '.grid-item',
+            columnWidth: 160
+        });
+    </script>
+
+    <!--Attempt to make responsive-->
+    <style>
+        @media only screen and (max-width: 1400px) {
+            #inputContainer {
+                width: 75%;
+            }
+
+            .infoHolder {
+                padding: 2px;
+            }
+
+            #narrow {
+                width: 15%;
+            }
+        }
+
+        @media only screen and (max-width: 1000px) {
+            #inputContainer {
+                width: 90%;
+            }
+
+            #map {
+                height: 420px;
+            }
+        }
+
+        #map {
+            height: 540px;
+            width: 1100px;
+            border: 1px solid #333;
+            margin-top: 0.6em;
+        }
+    </style>
+
+    <!--Fonts-->
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Oxygen|Yanone+Kaffeesatz');
+    </style>
+
+    <script type="text/javascript">
+        $(function(){
+            $('.chkbox').click(function(){
+                $(':checkbox').attr('checked',false);
+                $('#'+$(this).attr('id')).attr('checked',true);
+                search_types(map.getCenter());
+            });
+        });
+
+        var map;
+        var markersArray = [];
+        var startLoc = new google.maps.LatLng(30.6052585, -96.3557937);
+        var marker;
+        var geocoder = new google.maps.Geocoder();
+        var infowindow = new google.maps.InfoWindow();
+
+        function initialize() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                center: startLoc,
+                zoom: 12
+            });
+
+            google.maps.event.addListener(map, 'zoom_changed', function () {
+                search_types(map.getCenter());
+            });
+
+            google.maps.event.addListener(map, 'dragend', function () {
+                search_types(map.getCenter());
+            });
+
+            infowindow = new google.maps.InfoWindow();
+
+            search_types();
+
+            $('#everythingmaps').css('visibility', 'hidden');
+        }
+
+        function createMarker(place,icon) {
+            var marker = new google.maps.Marker({
+                map: map,
+                position: place.geometry.location,
+                icon: icon,
+                visible:true
+            });
+
+            markersArray.push(marker);
+            google.maps.event.addListener(marker, 'click', function() {
+                var rating = place.rating;
+
+                if (rating === undefined) {
+                    rating = 'N/A';
+                }
+
+                var info = "<br><b>" + place.name + "</b><br><b>Rating: </b>" + rating +
+                    "<br><br><b>Address: </b>" + place.vicinity +
+                    "</br><b>Type: </b>";
+
+                for (i = 0; i < place.types.length - 2; i++) {
+                    if (place.types[i] !== 'food') {
+                        var type = place.types[i];
+                        type = type.replace('_', ' ');
+
+                        try {
+                            type = type.replace('_', ' ');
+                        } catch (e) {
+
+                        }
+
+                        type = type.charAt(0).toUpperCase() + type.slice(1);
+
+                        info += (type + ', ');
+                    }
+                }
+
+                info = info.slice(0, info.length - 2);
+
+                infowindow.setContent(info);
+                infowindow.open(map, this);
+            });
+        }
+
+        function search_types(latLng) {
+            clearOverlays();
+
+            if(!latLng){
+                var latLng = startLoc;
+            }
+            var type = $('.chkbox:checked').val();
+
+            try {
+                var typeArray = type.split(',');
+            } catch (event) {
+
+            }
+
+            try {
+                var icon = "images/"+typeArray[0]+".png";
+            } catch (event) {
+                return;
+            }
+
+            var rad = 2000;
+
+            if (map.getZoom() < 10) {
+                rad *= 2;
+            } else if (map.getZoom() > 14) {
+                if (map.getZoom() > 16)
+                    rad = 200;
+                else
+                    rad /= 3;
+            }
+
+            var request = {
+                location: latLng,
+                radius: rad,
+                types: typeArray
+            };
+
+            var service = new google.maps.places.PlacesService(map);
+            service.search(request, function(results, status) {
+
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    for (var i = 0; i < results.length; i++) {
+                        results[i].html_attributions='';
+                        createMarker(results[i],icon);
+                    }
+                }
+            });
+
+        }
+
+        function clearOverlays() {
+            if (markersArray) {
+                for (i in markersArray) {
+                    markersArray[i].setVisible(false)
+                }
+            }
+
+            infowindow.close();
+        }
+        google.maps.event.addDomListenerOnce(window, 'load', initialize);
+
+        function showMap(place) {
+            var imageUrl = 'http://chart.apis.google.com/chart?cht=mm&chs=24x32&chco=FFFFFF,008CFF,000000&ext=.png';
+            var markerImage = new google.maps.MarkerImage(imageUrl,new google.maps.Size(24, 32));
+            var input_addr = place;
+            geocoder.geocode({address: input_addr}, function(results, status) {
+                if (status === google.maps.GeocoderStatus.OK) {
+                    var latitude = results[0].geometry.location.lat();
+                    var longitude = results[0].geometry.location.lng();
+                    var latlng = new google.maps.LatLng(latitude, longitude);
+                    if (results[0]) {
+                        map.setZoom(16);
+                        map.setCenter(latlng);
+                        marker = new google.maps.Marker({
+                            position: latlng,
+                            map: map,
+                            icon: markerImage,
+                            draggable: false
+                        });
+
+                        $('#latitude,#longitude').show();
+                        $('#address').val(results[0].formatted_address);
+                        $('#latitude').val(marker.getPosition().lat());
+                        $('#longitude').val(marker.getPosition().lng());
+                        infowindow.setContent(results[0].formatted_address);
+                        infowindow.open(map, marker);
+                        search_types(marker.getPosition());
+                        google.maps.event.addListener(marker, 'click', function() {
+                            infowindow.open(map,marker);
+                        });
+
+                        google.maps.event.addListener(marker, 'dragend', function() {
+
+                            geocoder.geocode({'latLng': marker.getPosition()}, function(results, status) {
+                                if (status === google.maps.GeocoderStatus.OK) {
+                                    if (results[0]) {
+                                        $('#btn').hide();
+                                        $('#latitude,#longitude').show();
+                                        $('#address').val(results[0].formatted_address);
+                                        $('#latitude').val(marker.getPosition().lat());
+                                        $('#longitude').val(marker.getPosition().lng());
+                                    }
+
+                                    infowindow.setContent(results[0].formatted_address);
+                                    var centralLatLng = marker.getPosition();
+                                    search_types(centralLatLng);
+                                    infowindow.open(map, marker);
+                                }
+                            });
+                        });
+                    } else {
+//                        inputError(true);
+                    }
+                } else {
+//                    inputError(true);
+                }
+            });
+
+        }
+    </script>
+
+</head>
+
+<body>
+
+<div id="navHolder">
+    <!--<nav class="navbar navbar-toggleable-md navbar-light bg-faded fixed-top" id="navBar" style="padding-top: 0px; padding-bottom: 0px;">-->
+        <!--<button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">-->
+            <!--<span class="navbar-toggler-icon"></span>-->
+        <!--</button>-->
+        <!--<a class="navbar-brand" id="topBtn" style="font-family: 'Yanone Kaffeesatz', sans-serif; font-size: 160%;" href="#">-->
+            <!--Sherpa-->
+        <!--</a>-->
+
+        <!--<div class="collapse navbar-collapse" id="navbarSupportedContent">-->
+            <!--<ul class="navbar-nav mr-auto">-->
+                <!--<li class="nav-item active" id="packingNavHolder">-->
+                    <!--<a class="nav-link disabled" id="packingNav" style="font-family: 'Oxygen-Light', sans-serif; padding-bottom: 5px;">Packing <span class="sr-only">(current)</span></a>-->
+                <!--</li>-->
+                <!--<li class="nav-item" id="todoNavHolder">-->
+                    <!--<a class="nav-link disabled" id="todoNav" style="font-family: 'Oxygen-Light', sans-serif; padding-bottom: 5px;">Todo</a>-->
+                <!--</li>-->
+            <!--</ul>-->
+        <!--</div>-->
+
+        <!--<script>-->
+            <!--// Navbar scrolling and such-->
+            <!--var scrollRate = 550;-->
+
+            <!--$('#topBtn').click(function() {-->
+                <!--$('html, body').animate({scrollTop: '0px'}, 700);-->
+
+                <!--window.location = '#sherpa';-->
+            <!--});-->
+
+            <!--$('#packingNav').click(function() {-->
+                <!--if (!$('#packingNav').hasClass('disabled')) {-->
+                    <!--$('li').removeClass('active');-->
+                    <!--$('#packingNavHolder').addClass('active');-->
+                    <!--var offset = $("#packingLocation").offset().top;-->
+                    <!--$('html, body').animate({-->
+                        <!--scrollTop: offset-->
+                    <!--}, scrollRate);-->
+
+                    <!--window.location = '#packing';-->
+                <!--}-->
+            <!--});-->
+
+            <!--$('#todoNav').click(function() {-->
+                <!--if (!$('#todoNav').hasClass('disabled')) {-->
+
+                    <!--$('li').removeClass('active');-->
+                    <!--$('#todoNavHolder').addClass('active');-->
+                    <!--var offset = $("#todoLocation").offset().top;-->
+                    <!--$('html, body').animate({-->
+                        <!--scrollTop: offset-->
+                    <!--}, scrollRate);-->
+
+                    <!--window.location = '#todo';-->
+                <!--}-->
+            <!--});-->
+        <!--</script>-->
+    <!--</nav>-->
+</div>
+
+<div id="top"></div>
+<div style="padding-top: 70px;" id="topHide"></div>
+
+<div class="title" id="name" style="font-size: 80px; color: crimson; padding-bottom: 0px; padding-top: 6%;">Sherpa</div>
+<div class="title" id="Slogan" style="padding-top: 0px">Your last minute travel guide</div>
+
+<div class="container" id="inputContainer">
+    <div class="span12">
+        <div id="parent">
+            <input type="text" class="form-control" id="wide" style="font-family: Oxygen-Light, sans-serif" placeholder="Destination: Zip or City,State">
+
+            <input type="text" class="form-control" id="narrow" style="font-family: Oxygen-Light, sans-serif" placeholder="Days: 1-10">
+
+            <button type="submit" class="btn btn-primary" id="button" style="font-family: Oxygen-Light, sans-serif" onclick="submit()">Go!</button>
+        </div>
+    </div>
+
+    <div id="error">Issue with input</div>
+</div>
+
+<div style="padding: 400px;" id="hide"></div>
+<div style="margin-top: 10%;"></div>
+
+<!--Packing list-->
+<div id="packingLocation" style="padding-top: 30px; padding-bottom: 5px;"></div>
+<div class="title" id="packList"></div>
+
+<div id="gridholder">
+    <div class="grid" id="grid">
+
+        <!--<div class="grid-item grid-item&#45;&#45;width2 grid-item&#45;&#45;height2">-->
+            <!--<div class="date"></div>-->
+            <!--<div style="height: 128px;">-->
+                <!--<div class="wear" style="width: 60%; float: left;  text-align: right">-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Vtton text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Video button</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Vin text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Video bt</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>V text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Vtton text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Video button</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Vin text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Video bt</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>V text</span>-->
+                    <!--</a>-->
+                <!--</div>-->
+                <!--<div class="wear" style="width: 40%; float: right; text-align: left">-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Vtton text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Video button</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Vin text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Video bt</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>V text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Vtton text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Video button</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Vin text</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>Video bt</span>-->
+                    <!--</a>-->
+                    <!--<a class="wearable">-->
+                        <!--<span>V text</span>-->
+                    <!--</a>-->
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+    </div>
+    </div>
+
+    <div id="separator" style="padding-top: 140px;"></div>
+
+    <!--Map-->
+    <div id="everythingmaps" style="text-align: center;">
+        <div id="todoLocation" style="padding-top: 30px; padding-bottom: 5px;"></div>
+        <div class="title" id="todoList"></div>
+
+        <div>
+            <ul style="padding: 0px;">
+                <input type="radio" name="mytype"  class="chkbox" id="restaurant"     value="restaurant"/><label   style="padding-left: 2px; padding-right: 2px; margin-bottom: 3px;"   for="restaurant" >Restaurant</label>
+                <input type="radio" name="mytype"  class="chkbox" id="park"           value="park,zoo,stadium,aquarium"/><label    style="padding-left: 2px; padding-right: 2px; margin-bottom: 3px;"    for="park" >Park</label>
+                <input type="radio" name="mytype"  class="chkbox" id="museum"         value="museum,art_gallery"/><label  style="padding-left: 2px; padding-right: 2px; margin-bottom: 3px;" for="museum" >Museum/Gallery</label>
+                <input type="radio" name="mytype"  class="chkbox" id="movie_theater"  value="movie_theater"/><label  style="padding-left: 2px; padding-right: 2px; margin-bottom: 3px;" for="movie_theater" >Movie Theater</label>
+                <input type="radio" name="mytype"  class="chkbox" id="night_club"     value="bar,night_club"/><label style="padding-left: 2px; padding-right: 2px; margin-bottom: 3px;" for="night_club" >Night Life</label>
+                <input type="radio" name="mytype"  class="chkbox" id="spa"            value="spa"/><label       style="padding-left: 2px; padding-right: 2px; margin-bottom: 3px;"      for="spa" >Spa</label>
+            </ul>
+        </div>
+
+
+        <div id="holderMap">
+            <div id="map" style="width: 100%;"></div>
+        </div>
+    </div>
+</div>
+
+<!--Bottom-->
+<div style="padding: 40px; background-color: #87939a; margin-top: 40px;">
+
+</div>
+
+</body>
+</html>

@@ -1,6 +1,4 @@
-/**
- * Created by Greg on 4/11/17.
- */
+
 
 // Ah oh launcho
 var first = true;
